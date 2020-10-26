@@ -1,0 +1,96 @@
+---
+title: "A Dram for the Distribution"
+author: "Ben Guilfoyle"
+date: "10/14/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## An Analysis of Scotch Reviews as a Normal Distribution
+
+As an data scientist student the central limit theorem is one of the most 
+powerful tools in your belt. The theorem in short allows you to approximate any 
+distribution of random events as the normal distribution. I decided to pick a
+fairly arbitrary, yet interesting data set and see if I could successfully 
+demonstrate the central limit theorem. 
+\n\n
+
+I have decided to investigate a set of roughly 2200 scotch reviews as the source
+of my investigation. I will look at the review each whiskey got, and attempt to see if it follows a normal distribution. Thereby verifying the central limit theorem.
+\n\n
+
+Starting off we see the distribution of review points.
+
+```{r}
+set.seed(1343)
+scotch <- read.csv("scotch_review.csv")
+review <- scotch$review.point
+par(mar = c(4, 4, .1, .1))
+rePlot <- hist(review, breaks = 60:100)
+```
+
+We can already begin to see a rough normal shape here. A peak occurs between 85
+and 90 points with a decrease in score from then on.
+
+Now let's look at the counts in each of these bins, and convert them to a 
+probability. Here we see for each review score the corresponding probability 
+of a review of that score. 
+
+```{r}
+reviewCounts <- rePlot$counts
+reviewProb <- reviewCounts / sum(reviewCounts)
+length(reviewProb)
+plot(61:100, reviewProb, type = 'h', xlab = "Review", main = "Probability of Scores")
+```
+
+Now suppose we select some scotch from this list of 2200+ different varieties.
+What would be the odds we get one with a high score? Suppose we take 100 bottles
+off the shelf that is our data set.
+
+```{r}
+randomBottles <- sample(review, size = 100000, replace = TRUE)
+hist(randomBottles, xlab = "Random Bottle Review")
+qqnorm(randomBottles)
+qqline(randomBottles)
+```
+
+One could say this is far from normal, distributing some skew, and long tails.
+But perhaps this can be improved on with some sampling. The QQPlot gives some further insight into this.There is some heavy clustering here due to the quantized nature of the data being integer reviews.  
+
+```{r}
+bottleAverage <- (sample(review, size = 100000, replace = TRUE) + 
+                  sample(review, size = 100000, replace = TRUE)) / 2
+hist(bottleAverage, main = "Average of 2 Samples")
+```
+
+Further to this, lets try look at sampling more than twice, until a normal distribution is found. 
+
+```{r}
+eachSample <- 50
+totalSamples <- 5000000
+scotchSamples <- matrix(sample(review, size = totalSamples, 
+                               replace =TRUE),ncol = eachSample)   
+
+hist(rowMeans(scotchSamples[,1:5]), main = '5 Sample Average', xlab = 'Random Scotch Rating')
+hist(rowMeans(scotchSamples[,1:15]), main = '15 Sample Average', xlab = 'Random Scotch Rating')
+hist(rowMeans(scotchSamples[,1:30]), main = '30 Sample Average', xlab = 'Random Scotch Rating')
+hist(rowMeans(scotchSamples[,1:50]), main = '50 Sample Average', xlab = 'Random Scotch Rating')
+
+s <- rowMeans(scotchSamples)
+mean(s)
+var(s)
+sd(s)
+```
+
+Finally after a couple iterations one can see a symmetrical distribution like that of the normal distribution.
+
+
+
+
+
+
+
+
